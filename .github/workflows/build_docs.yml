@@ -1,0 +1,50 @@
+# Minimal reproduction of facebookresearch/fairchem build_docs.yml
+# Trigger chain: pull_request -> contributor check completes -> workflow_run fires this
+# Untrusted code is materialised via actions/checkout ref=workflow_run.head_sha
+# Then executed via pip install of attacker-controlled packages/fairchem-core
+name: build documentation
+
+on:
+  workflow_run:
+    workflows:
+      - "contributor check"
+    types:
+      - completed
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      statuses: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        # Vulnerable line: head_sha of triggering workflow = attacker PR head
+        ref: ${{ github.event.workflow_run.head_sha }}
+        fetch-depth: 0
+
+    - name: Setup
+      uses: ./.github/actions/multi-trigger-setup
+      with:
+          status-context: '${{ github.job }}'
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies (exec sink - attacker setup.py runs here)
+      env:
+        HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      run: |
+        python -m pip install --upgrade pip
+        pip install ./packages/fairchem-core
+
+    - name: Cleanup
+      if: always()
+      uses: ./.github/actions/multi-trigger-cleanup
+      with:
+          status-context: '${{ github.job }}'

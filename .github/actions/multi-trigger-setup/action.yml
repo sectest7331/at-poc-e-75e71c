@@ -1,0 +1,16 @@
+# Minimal stub of the upstream composite action.
+# Upstream version diffs build_docs.yml against main and fails if changed on PR.
+# It does NOT diff packages/, docs/, or .github/actions/* — so attacker payload
+# in packages/fairchem-core/setup.py sails through this check unobserved.
+name: 'multi-trigger setup (stub)'
+description: 'Set commit status to pending (mirrors upstream)'
+inputs:
+  status-context:
+    description: 'commit status context'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: noop
+      shell: bash
+      run: echo "setup ok (status-context=${{ inputs.status-context }})"

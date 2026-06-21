@@ -1,0 +1,12 @@
+name: 'multi-trigger cleanup (stub)'
+description: 'Cleanup commit status (mirrors upstream)'
+inputs:
+  status-context:
+    description: 'commit status context'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: noop
+      shell: bash
+      run: echo "cleanup ok (status-context=${{ inputs.status-context }})"
